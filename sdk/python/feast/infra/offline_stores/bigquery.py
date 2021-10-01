@@ -213,6 +213,10 @@ class BigQueryRetrievalJob(RetrievalJob):
     def to_sql(self) -> str:
         """
         Returns the SQL query that will be executed in BigQuery to build the historical feature table.
+
+        The returned SQL query is purely information and should not be executed. The query can only be
+        successfully executed within the contextmanager in which it was created. In order to build the
+        historical feature table, one of the to_X() methods should be called, such as to_df().
         """
         with self._query_generator() as query:
             return query
