@@ -52,14 +52,17 @@ jobs:
       - name: Install dependencies
         run: |
           pwd
-          echo ${HOME}
-          echo ${GITHUB_WORKSPACE}
-          echo ${GOPATH}
-          echo ${GOBIN}
-          echo ${PATH}
-          echo ${GITHUB_PATH}
-          echo "$GOPATH:$GITHUB_PATH" >> $GITHUB_PATH
-          echo ${GITHUB_PATH}
+          echo "HOME: ${HOME}"
+          echo "GITHUB_WORKSPACE: ${GITHUB_WORKSPACE}"
+          echo "GOPATH: ${GOPATH}"
+          echo "GOBIN: ${GOBIN}"
+          echo "PATH: ${PATH}"
+          # echo ${GITHUB_PATH}
+          # echo "$GOPATH:$GITHUB_PATH" >> $GITHUB_PATH
+          # echo ${GITHUB_PATH}
+          export PATH=${PATH}:`go env GOPATH`/bin
+          echo "PATH with GOPATH: ${PATH}"
+          # export GITHUB_PATH=${GOPATH}:${GITHUB_PATH}
           make install-python-ci-dependencies
         env:
           GOPATH: /home/runner/work/feast/go
