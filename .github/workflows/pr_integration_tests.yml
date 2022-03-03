@@ -29,9 +29,12 @@ jobs:
         uses: docker/setup-buildx-action@v1
       - name: Build
         run: |
+          export GOPATH=${HOME}/work/feast/go
+          export PATH=${PATH}:`go env GOPATH`/bin
+          go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.27.0
           echo "GOPATH: ${GOPATH}"
-          echo "protoc-gen-go path: `which protoc-gen-go`"
           echo "PATH: ${PATH}"
+          echo "protoc-gen-go path: `which protoc-gen-go`"
           docker build \
             --file sdk/python/feast/infra/feature_servers/aws_lambda/Dockerfile \
             .
