@@ -71,24 +71,3 @@ jobs:
           SNOWFLAKE_CI_ROLE: ${{ secrets.SNOWFLAKE_CI_ROLE }}
           SNOWFLAKE_CI_WAREHOUSE: ${{ secrets.SNOWFLAKE_CI_WAREHOUSE }}
         run: FEAST_USAGE=False pytest -n 8 --cov=./ --cov-report=xml --verbose --color=yes sdk/python/tests
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v1
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./coverage.xml
-          flags: unittests
-          env_vars: OS,PYTHON
-          fail_ci_if_error: true
-          verbose: true
-
-  unit-test-go:
-    runs-on: ubuntu-latest
-    container: gcr.io/kf-feast/feast-ci:latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Install dependencies
-        run: make install-go-ci-dependencies
-      - name: Compile protos
-        run: make compile-protos-go
-      - name: Test
-        run: make test-go
