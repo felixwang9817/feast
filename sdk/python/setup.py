@@ -245,11 +245,14 @@ class BuildGoProtosCommand(Command):
     def _generate_go_protos(self, path: str):
         proto_files = glob.glob(os.path.join(self.proto_folder, path))
 
-        subprocess.check_call(
+        output = subprocess.run(
             self.go_protoc
             + ["-I", self.proto_folder, "--go_out", self.go_folder]
             + proto_files,
+            capture_output=True
         )
+        print(f"output stderr: {output.stderr}")
+        print(f"output stdout: {output.stdout}")
 
     def run(self):
         go_dir = Path(repo_root) / "go" / "protos"

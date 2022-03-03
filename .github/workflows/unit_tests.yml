@@ -45,6 +45,10 @@ jobs:
             ${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-pip-
       - name: Install pip-tools
         run: pip install pip-tools
+      # - name: Install protoc-gen-go
+      #   run: |
+      #     go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.27.0
+      #     echo ${{ which protoc-gen-go }}
       - name: Install dependencies
         run: |
           pwd
