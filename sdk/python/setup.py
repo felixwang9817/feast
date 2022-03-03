@@ -280,6 +280,12 @@ class BuildGoProtosCommand(Command):
         print(f"output stderr: {output.stderr}")
         print(f"output stdout: {output.stdout}")
 
+        subprocess.check_call(
+            self.go_protoc
+            + ["-I", self.proto_folder, "--go_out", self.go_folder]
+            + proto_files,
+        )
+
     def run(self):
         go_dir = Path(repo_root) / "go" / "protos"
         print(f"making dir: {go_dir}")
@@ -302,8 +308,8 @@ class DevelopCommand(develop):
     """Custom develop command."""
 
     def run(self):
-        # print("about to build python protos")
-        # self.run_command("build_python_protos")
+        print("about to build python protos")
+        self.run_command("build_python_protos")
         print("about to build go protos")
         self.run_command("build_go_protos")
         develop.run(self)
