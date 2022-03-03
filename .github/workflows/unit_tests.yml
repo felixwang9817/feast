@@ -51,6 +51,7 @@ jobs:
           pwd
           echo "HOME: ${HOME}"
           echo "GITHUB_WORKSPACE: ${GITHUB_WORKSPACE}"
+          echo "GOMODCACHE: ${GOMODCACHE}"
           echo "GOPATH: ${GOPATH}"
           echo "GOBIN: ${GOBIN}"
           echo "PATH: ${PATH}"
