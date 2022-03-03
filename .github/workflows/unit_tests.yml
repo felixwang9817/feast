@@ -55,7 +55,7 @@ jobs:
           echo "PATH: ${PATH}"
           export PATH=${PATH}:`go env GOPATH`/bin
           echo "PATH with GOPATH: ${PATH}"
-          go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.27.0
+          # go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.27.0
           echo "protoc-gen-go path: `which protoc-gen-go`"
           make install-python-ci-dependencies
         env:
