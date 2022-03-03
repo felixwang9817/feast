@@ -302,8 +302,8 @@ class DevelopCommand(develop):
     """Custom develop command."""
 
     def run(self):
-        print("about to build python protos")
-        self.run_command("build_python_protos")
+        # print("about to build python protos")
+        # self.run_command("build_python_protos")
         print("about to build go protos")
         self.run_command("build_go_protos")
         develop.run(self)
