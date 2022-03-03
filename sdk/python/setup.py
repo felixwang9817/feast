@@ -187,6 +187,21 @@ class BuildPythonProtosCommand(Command):
 
     def _generate_python_protos(self, path: str):
         proto_files = glob.glob(os.path.join(self.proto_folder, path))
+        proto_files = [proto_files[0]]
+
+        cmd = self.python_protoc + [
+            "-I",
+            self.proto_folder,
+            "--python_out",
+            self.python_folder,
+            "--grpc_python_out",
+            self.python_folder,
+            "--mypy_out",
+            self.python_folder,
+        ] + proto_files
+        print(f"repo root: {repo_root}")
+        print(f"python folder: {self.python_folder}")
+        print(f"executing cmd: {cmd}")
 
         subprocess.check_call(
             self.python_protoc
@@ -244,6 +259,17 @@ class BuildGoProtosCommand(Command):
 
     def _generate_go_protos(self, path: str):
         proto_files = glob.glob(os.path.join(self.proto_folder, path))
+        proto_files = [proto_files[0]]
+
+        cmd = self.go_protoc + [
+            "-I",
+            self.proto_folder,
+            "--go_out",
+            self.go_folder,
+        ] + proto_files
+        print(f"repo root: {repo_root}")
+        print(f"go folder: {self.go_folder}")
+        print(f"executing cmd: {cmd}")
 
         output = subprocess.run(
             self.go_protoc
@@ -256,7 +282,9 @@ class BuildGoProtosCommand(Command):
 
     def run(self):
         go_dir = Path(repo_root) / "go" / "protos"
+        print(f"making dir: {go_dir}")
         go_dir.mkdir(exist_ok=True)
+        print(f"made dir: {go_dir}")
         for sub_folder in self.sub_folders:
             self._generate_go_protos(f"feast/{sub_folder}/*.proto")
 
