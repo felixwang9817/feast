@@ -9,8 +9,8 @@ jobs:
       matrix:
         python-version: [ 3.7, 3.8, 3.9 ]
         go-version: [ 1.17.0 ]
-        # os: [ ubuntu-latest, macOS-latest]
-        os: [ macOS-latest ]
+        os: [ ubuntu-latest, macOS-latest]
+        # os: [ macOS-latest ]
     env:
       OS: ${{ matrix.os }}
       PYTHON: ${{ matrix.python-version }}
