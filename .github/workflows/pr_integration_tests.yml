@@ -29,6 +29,9 @@ jobs:
         uses: docker/setup-buildx-action@v1
       - name: Build
         run: |
+          echo "GOPATH: ${GOPATH}"
+          echo "protoc-gen-go path: `which protoc-gen-go`"
+          echo "PATH: ${PATH}"
           docker build \
             --file sdk/python/feast/infra/feature_servers/aws_lambda/Dockerfile \
             .
