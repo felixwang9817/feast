@@ -10,7 +10,12 @@ COPY go go
 COPY README.md README.md
 
 # Install Feast for AWS with Lambda dependencies
-RUN echo "protoc-gen-go path: `which protoc-gen-go`"
+RUN echo "PATH: $PATH"
+RUN echo "HOME: $HOME"
+RUN export GOPATH="$HOME/go"
+RUN echo "GOPATH: $GOPATH"
+RUN export PATH="$PATH:$(go env GOPATH)/bin"
+RUN echo "PATH: $PATH"
 RUN pip3 install -e 'sdk/python[aws,redis]'
 RUN pip3 install -r sdk/python/feast/infra/feature_servers/aws_lambda/requirements.txt --target "${LAMBDA_TASK_ROOT}"
 
