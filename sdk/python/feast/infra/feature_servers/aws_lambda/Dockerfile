@@ -16,6 +16,7 @@ COPY go go
 COPY README.md README.md
 
 # Install Feast for AWS with Lambda dependencies
+RUN go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.27.0
 RUN echo "PATH: $PATH"
 RUN echo "HOME: $HOME"
 RUN echo "GOPATH: $GOPATH"
