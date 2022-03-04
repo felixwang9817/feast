@@ -23,6 +23,11 @@ jobs:
           # code from the PR.
           ref: refs/pull/${{ github.event.pull_request.number }}/merge
           submodules: recursive
+      - name: Setup Go
+        id: setup-go
+        uses: actions/setup-go@v2
+        with:
+          go-version: "1.17.0"
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
       - name: Set up Docker Buildx
