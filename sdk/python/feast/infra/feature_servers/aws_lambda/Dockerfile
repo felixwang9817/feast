@@ -1,14 +1,25 @@
 FROM public.ecr.aws/lambda/python:3.9
 
+# Copy Golang
+COPY --from=golang:1.17-alpine /usr/local/go/ /usr/local/go/
+ENV GOPATH="/usr/local/go"
+ENV PATH="/usr/local/go/bin:${PATH}"
+RUN export PATH="$PATH:$(go env GOPATH)/bin"
+
 # Copy app handler code
 COPY sdk/python/feast/infra/feature_servers/aws_lambda/app.py ${LAMBDA_TASK_ROOT}
 
 # Copy necessary parts of the Feast codebase
 COPY sdk/python sdk/python
 COPY protos protos
+COPY go go
 COPY README.md README.md
 
 # Install Feast for AWS with Lambda dependencies
+RUN go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.27.0
+RUN echo "PATH: $PATH"
+RUN echo "HOME: $HOME"
+RUN echo "GOPATH: $GOPATH"
 RUN pip3 install -e 'sdk/python[aws,redis]'
 RUN pip3 install -r sdk/python/feast/infra/feature_servers/aws_lambda/requirements.txt --target "${LAMBDA_TASK_ROOT}"
 

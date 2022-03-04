@@ -70,9 +70,7 @@ DEFAULT_FULL_REPO_CONFIGS: List[IntegrationTestRepoConfig] = [
 if os.getenv("FEAST_IS_LOCAL_TEST", "False") != "True":
     DEFAULT_FULL_REPO_CONFIGS.extend(
         [
-            # Redis configurations
             IntegrationTestRepoConfig(online_store=REDIS_CONFIG),
-            IntegrationTestRepoConfig(online_store=REDIS_CLUSTER_CONFIG),
             # GCP configurations
             IntegrationTestRepoConfig(
                 provider="gcp",
@@ -115,6 +113,24 @@ if full_repo_configs_module is not None:
         ) from e
 else:
     FULL_REPO_CONFIGS = DEFAULT_FULL_REPO_CONFIGS
+
+GO_REPO_CONFIGS = [
+    IntegrationTestRepoConfig(
+        online_store=REDIS_CONFIG,
+        alpha_features=True,
+        go_feature_server=True,
+        go_server_port=54323,
+    ),
+]
+
+GO_CYCLE_REPO_CONFIGS = [
+    IntegrationTestRepoConfig(
+        online_store=REDIS_CONFIG,
+        alpha_features=True,
+        go_feature_server=True,
+        go_server_port=54321,
+    ),
+]
 
 
 @dataclass
@@ -263,7 +279,7 @@ class UniversalFeatureViews:
 
 
 def construct_universal_feature_views(
-    data_sources: UniversalDataSources,
+    data_sources: UniversalDataSources, with_odfv: bool = True,
 ) -> UniversalFeatureViews:
     driver_hourly_stats = create_driver_hourly_stats_feature_view(data_sources.driver)
     return UniversalFeatureViews(
@@ -275,7 +291,9 @@ def construct_universal_feature_views(
                 "driver": driver_hourly_stats,
                 "input_request": create_conv_rate_request_data_source(),
             }
-        ),
+        )
+        if with_odfv
+        else None,
         driver_age_request_fv=create_driver_age_request_feature_view(),
         order=create_order_feature_view(data_sources.orders),
         location=create_location_stats_feature_view(data_sources.location),
@@ -358,7 +376,6 @@ def construct_test_environment(
         registry = RegistryConfig(
             path=str(Path(repo_dir_name) / "registry.db"), cache_ttl_seconds=1,
         )
-
     config = RepoConfig(
         registry=registry,
         project=project,
@@ -367,13 +384,14 @@ def construct_test_environment(
         online_store=online_store,
         repo_path=repo_dir_name,
         feature_server=feature_server,
+        go_feature_server=test_repo_config.go_feature_server,
     )
 
     # Create feature_store.yaml out of the config
     with open(Path(repo_dir_name) / "feature_store.yaml", "w") as f:
         yaml.safe_dump(json.loads(config.json()), f)
 
-    fs = FeatureStore(repo_dir_name)
+    fs = FeatureStore(repo_dir_name, go_server_port=test_repo_config.go_server_port)
     # We need to initialize the registry, because if nothing is applied in the test before tearing down
     # the feature store, that will cause the teardown method to blow up.
     fs.registry._initialize_registry()

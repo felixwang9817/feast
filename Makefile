@@ -16,8 +16,6 @@
 
 ROOT_DIR 	:= $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 MVN := mvn -f java/pom.xml ${MAVEN_EXTRA_OPTS}
-PROTO_TYPE_SUBDIRS = core serving types storage
-PROTO_SERVICE_SUBDIRS = core serving
 OS := linux
 ifeq ($(shell uname -s), Darwin)
 	OS = osx
@@ -35,12 +33,12 @@ protos: compile-protos-go compile-protos-python compile-protos-docs
 
 build: protos build-java build-docker build-html
 
-install-ci-dependencies: install-python-ci-dependencies install-java-ci-dependencies install-go-ci-dependencies
-
 # Python SDK
 
 install-python-ci-dependencies:
 	cd sdk/python && python -m piptools sync requirements/py$(PYTHON)-ci-requirements.txt
+	# Required for generating Go protos in setup.py
+	go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.27.0
 	cd sdk/python && python setup.py develop
 
 lock-python-ci-dependencies:
@@ -50,8 +48,7 @@ package-protos:
 	cp -r ${ROOT_DIR}/protos ${ROOT_DIR}/sdk/python/feast/protos
 
 compile-protos-python:
-	@$(foreach dir,$(PROTO_TYPE_SUBDIRS),cd ${ROOT_DIR}/protos; python -m grpc_tools.protoc -I. --grpc_python_out=../sdk/python/feast/protos/ --python_out=../sdk/python/feast/protos/ --mypy_out=../sdk/python/feast/protos/ feast/$(dir)/*.proto;)
-	@$(foreach dir,$(PROTO_TYPE_SUBDIRS),grep -rli 'from feast.$(dir)' sdk/python/feast/protos | xargs -I@ sed -i.bak 's/from feast.$(dir)/from feast.protos.feast.$(dir)/g' @;)
+	python setup.py build_python_protos
 
 install-python:
 	cd sdk/python && python -m piptools sync requirements/py$(PYTHON)-requirements.txt
@@ -77,6 +74,18 @@ test-python-universal-local:
 
 test-python-universal:
 	FEAST_USAGE=False IS_TEST=True python -m pytest -n 8 --integration --universal sdk/python/tests
+
+test-python-go-server:
+	FEAST_USAGE=False IS_TEST=True python -m pytest -n 8 --integration --goserver sdk/python/tests
+
+test-python-go-server-with-thread:
+	FEAST_USAGE=False IS_TEST=True USE_GO_SERVER_THREAD=True python -m pytest -n 8 --integration --goserver sdk/python/tests
+
+test-python-go-server-lifecycle:
+	FEAST_USAGE=False IS_TEST=True python -m pytest -rP -n 8 --goserverlifecycle sdk/python/tests
+
+test-python-go-server-lifecycle-with-thread:
+	FEAST_USAGE=False IS_TEST=True USE_GO_SERVER_THREAD=True python -m pytest -rP -n 8 --goserverlifecycle sdk/python/tests
 
 format-python:
 	# Sort
@@ -120,20 +129,19 @@ build-java-no-tests:
 # Go SDK
 
 install-go-ci-dependencies:
-	go get -u github.com/golang/protobuf/protoc-gen-go
-	go get -u golang.org/x/lint/golint
+	go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.27.0
 
 compile-protos-go:
-	$(foreach dir,types serving core storage,cd ${ROOT_DIR}/protos; protoc -I/usr/local/include -I. --go_out=plugins=grpc,paths=source_relative:../sdk/go/protos feast/$(dir)/*.proto;)
+	python setup.py build_go_protos
 
 test-go:
-	cd ${ROOT_DIR}/sdk/go; go test ./...
+	go test ./...
 
 format-go:
-	cd ${ROOT_DIR}/sdk/go; gofmt -s -w *.go
+	gofmt -s -w go/**/**/*.go
 
 lint-go:
-	cd ${ROOT_DIR}/sdk/go; go vet
+	go vet ./go/internal/feast ./go/cmd/goserver
 
 # Docker
 

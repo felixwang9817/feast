@@ -13,25 +13,22 @@
 # limitations under the License.
 import glob
 import os
+import pathlib
 import re
 import shutil
 import subprocess
-import pathlib
-
 from distutils.cmd import Command
+from pathlib import Path
+
 from setuptools import find_packages
 
 try:
     from setuptools import setup
-    from setuptools.command.install import install
-    from setuptools.command.develop import develop
-    from setuptools.command.egg_info import egg_info
-    from setuptools.command.sdist import sdist
     from setuptools.command.build_py import build_py
+    from setuptools.command.develop import develop
 except ImportError:
-    from distutils.core import setup
-    from distutils.command.install import install
     from distutils.command.build_py import build_py
+    from distutils.core import setup
 
 NAME = "feast"
 DESCRIPTION = "Python SDK for Feast"
@@ -92,12 +89,10 @@ SNOWFLAKE_REQUIRED = [
     "snowflake-connector-python[pandas]>=2.7.3",
 ]
 
-GE_REQUIRED = [
-    "great_expectations>=0.14.0,<0.15.0"
-]
+GE_REQUIRED = ["great_expectations>=0.14.0,<0.15.0"]
 
 CI_REQUIRED = (
-        [
+    [
         "cryptography==3.3.2",
         "flake8",
         "black==19.10b0",
@@ -112,6 +107,7 @@ CI_REQUIRED = (
         "avro==1.10.0",
         "gcsfs",
         "urllib3>=1.25.4",
+        "psutil==5.9.0",
         "pytest>=6.0.0",
         "pytest-cov",
         "pytest-xdist",
@@ -137,11 +133,11 @@ CI_REQUIRED = (
         "types-setuptools",
         "types-tabulate",
     ]
-        + GCP_REQUIRED
-        + REDIS_REQUIRED
-        + AWS_REQUIRED
-        + SNOWFLAKE_REQUIRED
-        + GE_REQUIRED
+    + GCP_REQUIRED
+    + REDIS_REQUIRED
+    + AWS_REQUIRED
+    + SNOWFLAKE_REQUIRED
+    + GE_REQUIRED
 )
 
 DEV_REQUIRED = ["mypy-protobuf>=3.1.0", "grpcio-testing==1.*"] + CI_REQUIRED
@@ -167,53 +163,144 @@ if shutil.which("git"):
 else:
     use_scm_version = None
 
+PROTO_SUBDIRS = ["core", "serving", "types", "storage"]
 
-class BuildProtoCommand(Command):
-    description = "Builds the proto files into python files."
+
+class BuildPythonProtosCommand(Command):
+    description = "Builds the proto files into Python files."
+    user_options = []
 
     def initialize_options(self):
-        self.protoc = ["python", "-m", "grpc_tools.protoc"]  # find_executable("protoc")
+        self.python_protoc = [
+            "python",
+            "-m",
+            "grpc_tools.protoc",
+        ]  # find_executable("protoc")
         self.proto_folder = os.path.join(repo_root, "protos")
-        self.this_package = os.path.join(os.path.dirname(__file__) or os.getcwd(), 'feast/protos')
-        self.sub_folders = ["core", "serving", "types", "storage"]
+        self.python_folder = os.path.join(
+            os.path.dirname(__file__) or os.getcwd(), "feast/protos"
+        )
+        self.sub_folders = PROTO_SUBDIRS
 
     def finalize_options(self):
         pass
 
-    def _generate_protos(self, path):
+    def _generate_python_protos(self, path: str):
         proto_files = glob.glob(os.path.join(self.proto_folder, path))
+        proto_files = [proto_files[0]]
 
-        subprocess.check_call(self.protoc + [
-            '-I', self.proto_folder,
-            '--python_out', self.this_package,
-            '--grpc_python_out', self.this_package,
-            '--mypy_out', self.this_package] + proto_files)
+        cmd = self.python_protoc + [
+            "-I",
+            self.proto_folder,
+            "--python_out",
+            self.python_folder,
+            "--grpc_python_out",
+            self.python_folder,
+            "--mypy_out",
+            self.python_folder,
+        ] + proto_files
+        print(f"repo root: {repo_root}")
+        print(f"python folder: {self.python_folder}")
+        print(f"executing cmd: {cmd}")
+
+        subprocess.check_call(
+            self.python_protoc
+            + [
+                "-I",
+                self.proto_folder,
+                "--python_out",
+                self.python_folder,
+                "--grpc_python_out",
+                self.python_folder,
+                "--mypy_out",
+                self.python_folder,
+            ]
+            + proto_files,
+        )
 
     def run(self):
         for sub_folder in self.sub_folders:
-            self._generate_protos(f'feast/{sub_folder}/*.proto')
+            self._generate_python_protos(f"feast/{sub_folder}/*.proto")
 
         from pathlib import Path
 
-        for path in Path('feast/protos').rglob('*.py'):
+        for path in Path("feast/protos").rglob("*.py"):
             for folder in self.sub_folders:
                 # Read in the file
-                with open(path, 'r') as file:
+                with open(path, "r") as file:
                     filedata = file.read()
 
                 # Replace the target string
-                filedata = filedata.replace(f'from feast.{folder}', f'from feast.protos.feast.{folder}')
+                filedata = filedata.replace(
+                    f"from feast.{folder}", f"from feast.protos.feast.{folder}"
+                )
 
                 # Write the file out again
-                with open(path, 'w') as file:
+                with open(path, "w") as file:
                     file.write(filedata)
+
+
+class BuildGoProtosCommand(Command):
+    description = "Builds the proto files into Go files."
+    user_options = []
+
+    def initialize_options(self):
+        self.go_protoc = [
+            "python",
+            "-m",
+            "grpc_tools.protoc",
+        ]  # find_executable("protoc")
+        self.proto_folder = os.path.join(repo_root, "protos")
+        self.go_folder = os.path.join(repo_root, "go/protos")
+        self.sub_folders = PROTO_SUBDIRS
+
+    def finalize_options(self):
+        pass
+
+    def _generate_go_protos(self, path: str):
+        proto_files = glob.glob(os.path.join(self.proto_folder, path))
+        proto_files = [proto_files[0]]
+
+        cmd = self.go_protoc + [
+            "-I",
+            self.proto_folder,
+            "--go_out",
+            self.go_folder,
+        ] + proto_files
+        print(f"repo root: {repo_root}")
+        print(f"go folder: {self.go_folder}")
+        print(f"executing cmd: {cmd}")
+
+        output = subprocess.run(
+            self.go_protoc
+            + ["-I", self.proto_folder, "--go_out", self.go_folder]
+            + proto_files,
+            capture_output=True
+        )
+        print(f"output stderr: {output.stderr}")
+        print(f"output stdout: {output.stdout}")
+
+        subprocess.check_call(
+            self.go_protoc
+            + ["-I", self.proto_folder, "--go_out", self.go_folder]
+            + proto_files,
+        )
+
+    def run(self):
+        go_dir = Path(repo_root) / "go" / "protos"
+        print(f"making dir: {go_dir}")
+        go_dir.mkdir(exist_ok=True)
+        print(f"made dir: {go_dir}")
+        for sub_folder in self.sub_folders:
+            self._generate_go_protos(f"feast/{sub_folder}/*.proto")
 
 
 class BuildCommand(build_py):
     """Custom build command."""
 
     def run(self):
-        self.run_command('build_proto')
+        self.run_command("build_python_protos")
+        self.run_command("build_go_protos")
         build_py.run(self)
 
 
@@ -221,7 +308,10 @@ class DevelopCommand(develop):
     """Custom develop command."""
 
     def run(self):
-        self.run_command('build_proto')
+        print("about to build python protos")
+        self.run_command("build_python_protos")
+        print("about to build go protos")
+        self.run_command("build_go_protos")
         develop.run(self)
 
 
@@ -258,7 +348,13 @@ setup(
     ],
     entry_points={"console_scripts": ["feast=feast.cli:cli"]},
     use_scm_version=use_scm_version,
-    setup_requires=["setuptools_scm", "grpcio", "grpcio-tools==1.34.0", "mypy-protobuf==3.1.0", "sphinx!=4.0.0"],
+    setup_requires=[
+        "setuptools_scm",
+        "grpcio",
+        "grpcio-tools==1.34.0",
+        "mypy-protobuf==3.1.0",
+        "sphinx!=4.0.0",
+    ],
     package_data={
         "": [
             "protos/feast/**/*.proto",
@@ -267,7 +363,8 @@ setup(
         ],
     },
     cmdclass={
-        "build_proto": BuildProtoCommand,
+        "build_python_protos": BuildPythonProtosCommand,
+        "build_go_protos": BuildGoProtosCommand,
         "build_py": BuildCommand,
         "develop": DevelopCommand,
     },
