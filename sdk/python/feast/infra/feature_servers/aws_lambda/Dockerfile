@@ -1,5 +1,9 @@
 FROM public.ecr.aws/lambda/python:3.9
 
+# Copy Golang
+COPY --from=golang:1.17-alpine /usr/local/go/ /usr/local/go/
+ENV PATH="/usr/local/go/bin:${PATH}"
+
 # Copy app handler code
 COPY sdk/python/feast/infra/feature_servers/aws_lambda/app.py ${LAMBDA_TASK_ROOT}
 
