@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.19.4](https://github.com/feast-dev/feast/compare/v0.19.3...v0.19.4) (2022-04-06)
+
+
+### Bug Fixes
+
+* Add spark to lambda dockerfile ([#2480](https://github.com/feast-dev/feast/issues/2480)) ([f7911b7](https://github.com/feast-dev/feast/commit/f7911b7b75a219c87c158be2ae57d6161c3998cf))
+* Don't prevent apply from running given duplicate empty names in data sources. Also fix repeated apply of Spark data source. ([#2415](https://github.com/feast-dev/feast/issues/2415)) ([9baba23](https://github.com/feast-dev/feast/commit/9baba23d6652d3ef9e994c7ece3940d30fe2600a))
+* Fix DataSource constructor to unbreak custom data sources ([#2492](https://github.com/feast-dev/feast/issues/2492)) ([597c543](https://github.com/feast-dev/feast/commit/597c5430001c4a013594814bb34c78bde36f689c))
+
 ## [0.19.3](https://github.com/feast-dev/feast/compare/v0.19.2...v0.19.3) (2022-03-09)
 
 
