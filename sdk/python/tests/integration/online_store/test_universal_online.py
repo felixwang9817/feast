@@ -518,9 +518,10 @@ def test_stream_feature_view_online_retrieval(
 
 
 @pytest.mark.integration
-@pytest.mark.universal_online_stores
+@pytest.mark.universal_online_stores(only=["redis"])
 @pytest.mark.goserver
-@pytest.mark.parametrize("full_feature_names", [True, False], ids=lambda v: str(v))
+@pytest.mark.parametrize("full_feature_names", [False], ids=lambda v: str(v))
+# @pytest.mark.parametrize("full_feature_names", [True, False], ids=lambda v: str(v))
 def test_online_retrieval(
     environment, universal_data_sources, feature_server_endpoint, full_feature_names
 ):
@@ -620,13 +621,19 @@ def test_online_retrieval(
     unprefixed_feature_refs.remove("conv_rate_plus_100")
     unprefixed_feature_refs.remove("conv_rate_plus_val_to_add")
 
-    online_features_dict = get_online_features_dict(
-        environment=environment,
-        endpoint=feature_server_endpoint,
-        features=feature_refs,
-        entity_rows=entity_rows,
-        full_feature_names=full_feature_names,
-    )
+    import faulthandler; faulthandler.enable()
+
+    import psutil
+
+    for i in range(10000):
+        print(psutil.virtual_memory())
+        online_features_dict = get_online_features_dict(
+            environment=environment,
+            endpoint=feature_server_endpoint,
+            features=feature_refs,
+            entity_rows=entity_rows,
+            full_feature_names=full_feature_names,
+        )
 
     # Test that the on demand feature views compute properly even if the dependent conv_rate
     # feature isn't requested.

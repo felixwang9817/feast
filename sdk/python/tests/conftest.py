@@ -283,6 +283,10 @@ def pytest_generate_tests(metafunc: pytest.Metafunc):
                         if c not in _config_cache:
                             _config_cache[c] = c
 
+                        # Temporarily skip non-Go tests.
+                        if not config.get("go_feature_retrieval"):
+                            continue
+
                         configs.append(_config_cache[c])
         else:
             # No offline stores requested -> setting the default or first available
