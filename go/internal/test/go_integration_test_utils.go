@@ -35,7 +35,7 @@ type Row struct {
 }
 
 func ReadParquet(filePath string) ([]*Row, error) {
-	allocator := memory.NewGoAllocator()
+	allocator := memory.NewCgoArrowAllocator()
 	pqfile, err := file.OpenParquetFile(filePath, false)
 	if err != nil {
 		return nil, err

@@ -59,7 +59,7 @@ var (
 )
 
 func TestConversionBetweenProtoAndArrow(t *testing.T) {
-	pool := memory.NewGoAllocator()
+	pool := memory.NewCgoArrowAllocator()
 	for _, vector := range PROTO_VALUES {
 		arrowArray, err := ProtoValuesToArrowArray(vector, pool, len(vector))
 		assert.Nil(t, err)
