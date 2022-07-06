@@ -438,6 +438,8 @@ class build_ext(_build_ext):
             [
                 "gopy",
                 "build",
+                "--build-tags",
+                'cgo ccalloc',
                 "-output",
                 destination,
                 "-vm",
