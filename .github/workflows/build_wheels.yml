@@ -157,7 +157,8 @@ jobs:
     needs: get-version
     strategy:
       matrix:
-        component: [feature-server, feature-server-python-aws, feature-server-java, feature-transformation-server]
+        # component: [feature-server, feature-server-python-aws, feature-server-java, feature-transformation-server]
+        component: [feature-server-java]
     env:
       REGISTRY: feastdev
     steps:
