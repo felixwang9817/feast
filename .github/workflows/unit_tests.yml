@@ -30,6 +30,7 @@ jobs:
         run: |
           brew install mysql
           brew install zlib
+          echo "hello"
           PATH=$PATH:/usr/local/mysql/bin
       - name: Upgrade pip version
         run: |
