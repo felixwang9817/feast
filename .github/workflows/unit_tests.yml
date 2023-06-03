@@ -28,10 +28,14 @@ jobs:
       - name: Install mysql on macOS
         if:  startsWith(matrix.os, 'macOS')
         run: |
-          brew install mysql@8.0.32
-          brew install zlib
+          brew install mysql
           echo "hello"
           PATH=$PATH:/usr/local/mysql/bin
+      - name: Work around Homebrew MySQL being broken
+        if:  startsWith(matrix.os, 'macOS')
+        run: |
+          brew install zlib
+          ln -sv $(brew --prefix zlib)/lib/libz.dylib $(brew --prefix)/lib/libzlib.dylib
       - name: Upgrade pip version
         run: |
           pip install --upgrade pip
