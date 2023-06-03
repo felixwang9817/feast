@@ -29,6 +29,7 @@ jobs:
         if:  startsWith(matrix.os, 'macOS')
         run: |
           brew install mysql
+          brew install zlib
           PATH=$PATH:/usr/local/mysql/bin
       - name: Upgrade pip version
         run: |
